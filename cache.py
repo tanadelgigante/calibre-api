@@ -17,12 +17,16 @@ class CacheManager:
         Args:
             redis_url (str): URL di connessione a Redis
         """
-        redis = aioredis.from_url(
-            redis_url, 
-            encoding="utf8", 
-            decode_responses=True
-        )
-        FastAPICache.init(RedisBackend(redis), prefix="calibre_cache")
+        try:
+            redis = aioredis.from_url(
+                redis_url, 
+                encoding="utf8", 
+                decode_responses=True
+            )
+            FastAPICache.init(RedisBackend(redis), prefix="calibre_cache")
+            print("Redis cache initialized")  # Debug
+        except Exception as e:
+            print(f"Errore durante l'inizializzazione di Redis: {e}")
 
     @classmethod
     @cache(expire=3600)  # Cache di default 1 ora
