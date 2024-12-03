@@ -5,7 +5,7 @@ from fastapi import FastAPI, Depends
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
-
+from datetime import datetime
 from cache import CacheManager 
 from database import CalibreDatabase
 from models import LibraryStatsModel, BookModel, BookSearchParams
@@ -38,13 +38,10 @@ calibre_db = CalibreDatabase(CALIBRE_LIBRARY_PATH)
 async def get_library_statistics(
     _: bool=Depends(TokenManager.validate_api_token)
 ):
-    """
-    Recupera statistiche complete della libreria Calibre.
-    Richiede token API valido.
-    """
-
     async def fetch_stats():
-        return calibre_db.get_database_stats()
+        stats = calibre_db.get_database_stats()
+        stats['last_updated'] = datetime.now()  # Add last_updated field
+        return stats
 
     return await CacheManager.cached_query(
         key="library_stats",
