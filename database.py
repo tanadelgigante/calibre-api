@@ -95,17 +95,20 @@ class CalibreDatabase:
                 """)
                 
                 result = session.execute(stats_query).first()
-                print("Database stats query result:", result)  # Debug output
+                print("Database stats query raw result:", result)  # Debug output
                 
-                # Restituzione dei dati con valori di default se mancanti
-                return {
+                # Gestione valori di default
+                stats = {
                     'total_books': result['total_books'] if result and 'total_books' in result else 0,
                     'read_books': result['read_books'] if result and 'read_books' in result else 0,
                     'unread_books': result['unread_books'] if result and 'unread_books' in result else 0,
                     'series_books': result['series_books'] if result and 'series_books' in result else 0,
                 }
+                print("Parsed stats:", stats)  # Debug parsed output
+                return stats
         except SQLAlchemyError as e:
             raise HTTPException(status_code=500, detail=f"Errore database: {str(e)}")
+
 
 
     def search_books(

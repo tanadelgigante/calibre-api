@@ -36,23 +36,25 @@ calibre_db = CalibreDatabase(CALIBRE_LIBRARY_PATH)
 # Endpoint statistiche libreria con caching
 @app.get("/statistics", response_model=LibraryStatsModel)
 async def get_library_statistics(
-    _: bool=Depends(TokenManager.validate_api_token)
+    _: bool = Depends(TokenManager.validate_api_token)
 ):
     async def fetch_stats():
         stats = calibre_db.get_database_stats()
-        print("Fetched stats:", stats)
-        stats['total_books'] = stats.get('total_books', 0)
-        stats['read_books'] = stats.get('read_books', 0)
-        stats['unread_books'] = stats.get('unread_books', 0)
-        stats['series_books'] = stats.get('series_books', 0)
-        stats['last_updated'] = datetime.now()  # Add last_updated field
+        stats['last_updated'] = datetime.now()
         return stats
 
-    return await CacheManager.cached_query(
+    result = await CacheManager.cached_query(
         key="library_stats",
         query_func=fetch_stats,
-        expire=3600  # Cache valida per 1 ora
+        expire=3600
     )
+    
+    print("Final stats returned to response:", result)  # Debug response
+    if not result:
+        raise HTTPException(status_code=500, detail="Failed to fetch library statistics")
+    
+    return result
+
 
 
 # Endpoint ricerca libri

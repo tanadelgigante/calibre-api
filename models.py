@@ -27,11 +27,12 @@ class BookModel(BaseModel):
     published_date: Optional[datetime] = None
 
 class LibraryStatsModel(BaseModel):
-    total_books: Optional[int] = 0
-    read_books: Optional[int] = 0
-    unread_books: Optional[int] = 0
-    series_books: Optional[int] = 0
-    last_updated: Optional[datetime] = datetime.now()
+    total_books: int = 0
+    read_books: int = 0
+    unread_books: int = 0
+    series_books: int = 0
+    last_updated: Optional[datetime] = None
+
 
 class BookSearchParams(BaseModel):
     title: Optional[str] = None
