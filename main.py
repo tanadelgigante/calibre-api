@@ -40,6 +40,9 @@ async def get_library_statistics(
 ):
     async def fetch_stats():
         stats = calibre_db.get_database_stats()
+        print("Stats fetched from database:", stats)  # Debug output
+        if not stats:
+            print("No stats returned from database!")
         stats['last_updated'] = datetime.now()
         return stats
 

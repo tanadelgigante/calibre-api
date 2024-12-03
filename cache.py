@@ -35,34 +35,26 @@ class CacheManager:
         **kwargs
     ) -> Optional[Any]:
         """
-        Esegue una funzione con caching Redis
-        
-        Args:
-            key (str): Chiave univoca per la cache
-            query_func (callable): Funzione da eseguire
-            expire (int): Tempo di scadenza cache
-            *args, **kwargs: Argomenti per query_func
-        
-        Returns:
-            Risultato della funzione, potenzialmente cached
+        Esegue una funzione con caching Redis.
         """
         try:
             result = await query_func(*args, **kwargs)
+            print(f"Result from query_func: {result}")  # Debug output
             return result
         except Exception as e:
-            # Log dell'eccezione
             print(f"Errore in cached_query: {e}")
             return None
-
-    @classmethod
-    async def invalidate_cache(cls, key: str):
-        """
-        Invalida una specifica chiave in cache
-        
-        Args:
-            key (str): Chiave da rimuovere
-        """
-        await FastAPICache.clear(key)
+    
+    
+        @classmethod
+        async def invalidate_cache(cls, key: str):
+            """
+            Invalida una specifica chiave in cache
+            
+            Args:
+                key (str): Chiave da rimuovere
+            """
+            await FastAPICache.clear(key)
 
     @classmethod
     async def clear_all_cache(cls):

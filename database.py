@@ -81,9 +81,6 @@ class CalibreDatabase:
             pass
 
     def get_database_stats(self) -> Dict:
-        """
-        Recupera statistiche complete del database.
-        """
         try:
             with self.session_scope() as session:
                 stats_query = text("""
@@ -95,19 +92,24 @@ class CalibreDatabase:
                 """)
                 
                 result = session.execute(stats_query).first()
-                print("Database stats query raw result:", result)  # Debug output
+                print("Raw database result:", result)  # Debug output
                 
-                # Gestione valori di default
+                if not result:
+                    print("Query returned no results.")
+                    return None
+                
                 stats = {
-                    'total_books': result['total_books'] if result and 'total_books' in result else 0,
-                    'read_books': result['read_books'] if result and 'read_books' in result else 0,
-                    'unread_books': result['unread_books'] if result and 'unread_books' in result else 0,
-                    'series_books': result['series_books'] if result and 'series_books' in result else 0,
+                    'total_books': result['total_books'] if 'total_books' in result else 0,
+                    'read_books': result['read_books'] if 'read_books' in result else 0,
+                    'unread_books': result['unread_books'] if 'unread_books' in result else 0,
+                    'series_books': result['series_books'] if 'series_books' in result else 0,
                 }
-                print("Parsed stats:", stats)  # Debug parsed output
+                print("Parsed database stats:", stats)  # Debug output
                 return stats
         except SQLAlchemyError as e:
+            print(f"Database error: {e}")
             raise HTTPException(status_code=500, detail=f"Errore database: {str(e)}")
+
 
 
 
