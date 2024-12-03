@@ -41,6 +41,9 @@ async def get_library_statistics(
     async def fetch_stats():
         stats = calibre_db.get_database_stats()
         stats['total_books'] = stats.get('total_books', 0)
+        stats['read_books'] = stats.get('read_books', 0)
+        stats['unread_books'] = stats.get('unread_books', 0)
+        stats['series_books'] = stats.get('series_books', 0)
         stats['last_updated'] = datetime.now()  # Add last_updated field
         return stats
 
