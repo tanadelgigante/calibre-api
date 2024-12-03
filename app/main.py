@@ -1,27 +1,26 @@
+# main.py
 import os
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordRequestForm
 
+from app.security import TokenManager
 from app.database import CalibreDatabase
 from app.models import LibraryStatsModel, BookModel, BookSearchParams
-from app.security import SecurityManager
 from app.cache import CacheManager
 
 # Configurazioni da variabili d'ambiente
 CALIBRE_LIBRARY_PATH = os.getenv('CALIBRE_LIBRARY_PATH', '/calibre-library')
-JWT_SECRET = os.getenv('JWT_SECRET', 'your-secret-key')
 
 # Inizializzazione applicazione
 app = FastAPI(
     title="Calibre Library API",
-    description="API per gestione libreria Calibre con autenticazione e caching"
+    description="API per gestione libreria Calibre con autenticazione token"
 )
 
 # Configurazione CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permettere origine specifiche in produzione
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,30 +29,14 @@ app.add_middleware(
 # Inizializzazione database Calibre
 calibre_db = CalibreDatabase(CALIBRE_LIBRARY_PATH)
 
-# Rotte di autenticazione
-@app.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    """
-    Endpoint per generazione token di autenticazione.
-    In un'implementazione reale, verificare le credenziali contro un database utenti.
-    """
-    # Esempio di autenticazione (da sostituire con vera logica)
-    if form_data.username == "admin" and form_data.password == "password":
-        access_token = SecurityManager.create_access_token(
-            {"sub": form_data.username}
-        )
-        return {"access_token": access_token, "token_type": "bearer"}
-    
-    raise HTTPException(status_code=401, detail="Credenziali non valide")
-
 # Endpoint statistiche libreria con caching
 @app.get("/statistics", response_model=LibraryStatsModel)
 async def get_library_statistics(
-    username: str = Depends(SecurityManager.get_current_user)
+    _: bool = Depends(TokenManager.validate_api_token)
 ):
     """
     Recupera statistiche complete della libreria Calibre.
-    Richiede autenticazione e utilizza caching.
+    Richiede token API valido.
     """
     async def fetch_stats():
         return calibre_db.get_database_stats()
@@ -68,11 +51,11 @@ async def get_library_statistics(
 @app.get("/books/search", response_model=list[BookModel])
 async def search_books(
     params: BookSearchParams = Depends(),
-    username: str = Depends(SecurityManager.get_current_user)
+    _: bool = Depends(TokenManager.validate_api_token)
 ):
     """
     Ricerca libri con filtri multipli.
-    Supporta ricerca per titolo, autore e numero massimo di risultati.
+    Richiede token API valido.
     """
     async def search_function():
         return calibre_db.search_books(
@@ -90,10 +73,11 @@ async def search_books(
         expire=1800  # Cache valida per 30 minuti
     )
 
-# Configurazione cache all'avvio dell'applicazione
+# Configurazione all'avvio dell'applicazione
 @app.on_event("startup")
 async def startup_event():
     await CacheManager.init_cache()
+    TokenManager.init_token()
 
 if __name__ == "__main__":
     import uvicorn

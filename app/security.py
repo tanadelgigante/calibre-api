@@ -1,121 +1,38 @@
-from datetime import datetime, timedelta
-from typing import Optional, Dict
+# security.py
+from fastapi import Security, HTTPException, status
+from fastapi.security.api_key import APIKeyHeader, APIKeyQuery
+import os
 
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
-from passlib.context import CryptContext
-from pydantic import BaseModel
-
-# Configurazioni di sicurezza
-SECRET_KEY = "your-secret-key"  # Dovrebbe essere un segreto sicuro caricato da variabili ambiente
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
-
-class SecurityManager:
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+class TokenManager:
+    API_KEY = None
 
     @classmethod
-    def verify_password(cls, plain_password: str, hashed_password: str) -> bool:
+    def init_token(cls):
         """
-        Verifica la corrispondenza tra password in chiaro e hash.
-        
-        Args:
-            plain_password (str): Password in formato testo
-            hashed_password (str): Password hashata da confrontare
-        
-        Returns:
-            bool: True se le password corrispondono
+        Inizializza il token statico dall'ambiente.
+        Deve essere chiamato all'avvio dell'applicazione.
         """
-        return cls.pwd_context.verify(plain_password, hashed_password)
+        cls.API_KEY = os.getenv('API_TOKEN', None)
+        
+        if not cls.API_KEY or len(cls.API_KEY) != 32:
+            raise ValueError("API Token deve essere una stringa di 32 caratteri")
 
     @classmethod
-    def get_password_hash(cls, password: str) -> str:
+    def validate_api_token(cls, api_key: str = Security(APIKeyHeader(name="X-API-Token", auto_error=False)) | 
+                                                 Security(APIKeyQuery(name="api_token", auto_error=False))):
         """
-        Genera hash sicuro della password.
-        
-        Args:
-            password (str): Password in formato testo
-        
-        Returns:
-            str: Password hashata
+        Valida il token API passato nell'header o nella query string.
         """
-        return cls.pwd_context.hash(password)
-
-    @classmethod
-    def create_access_token(
-        cls, 
-        data: Dict, 
-        expires_delta: Optional[timedelta] = None
-    ) -> str:
-        """
-        Genera token di accesso JWT.
-        
-        Args:
-            data (Dict): Payload del token
-            expires_delta (Optional[timedelta]): Tempo di scadenza token
-        
-        Returns:
-            str: Token JWT
-        """
-        to_encode = data.copy()
-        
-        if expires_delta:
-            expire = datetime.utcnow() + expires_delta
-        else:
-            expire = datetime.utcnow() + timedelta(minutes=15)
-        
-        to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-        
-        return encoded_jwt
-
-    @classmethod
-    def decode_token(cls, token: str) -> TokenData:
-        """
-        Decodifica e valida un token JWT.
-        
-        Args:
-            token (str): Token JWT da decodificare
-        
-        Returns:
-            TokenData: Dati estratti dal token
-        
-        Raises:
-            HTTPException: Se token non è valido
-        """
-        try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            username: str = payload.get("sub")
-            
-            if username is None:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token non valido"
-                )
-            
-            return TokenData(username=username)
-        
-        except JWTError:
+        if not cls.API_KEY:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Impossibile validare le credenziali"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                detail="Token non configurato"
             )
-
-    @classmethod
-    def get_current_user(cls, token: str = Depends(oauth2_scheme)) -> str:
-        """
-        Ottiene l'utente corrente dal token JWT.
         
-        Args:
-            token (str): Token JWT
+        if not api_key or api_key != cls.API_KEY:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, 
+                detail="Token non valido"
+            )
         
-        Returns:
-            str: Username dell'utente
-        """
-        token_data = cls.decode_token(token)
-        return token_data.username
+        return True
