@@ -31,7 +31,7 @@ class LibraryStatsModel(BaseModel):
     read_books: int
     unread_books: int
     series_books: int
-    last_updated: datetime = datetime.now()
+    last_updated: Optional[datetime] = datetime.now()
 
 class BookSearchParams(BaseModel):
     title: Optional[str] = None
