@@ -80,32 +80,32 @@ class CalibreDatabase:
         except Exception:
             pass
 
- def get_database_stats(self) -> Dict:
-    """
-    Recupera statistiche complete del database.
-    """
-    try:
-        with self.session_scope() as session:
-            stats_query = text("""
-                SELECT 
-                    (SELECT COUNT(*) FROM books) as total_books,
-                    (SELECT COUNT(*) FROM books WHERE rating > 0) as read_books,
-                    (SELECT COUNT(*) FROM books WHERE rating = 0) as unread_books,
-                    (SELECT COUNT(DISTINCT series) FROM books WHERE series IS NOT NULL) as series_books
-            """)
-            
-            result = session.execute(stats_query).first()
-            print("Database stats query result:", result)  # Debug output
-            
-            # Restituzione dei dati con valori di default se mancanti
-            return {
-                'total_books': result['total_books'] if result and 'total_books' in result else 0,
-                'read_books': result['read_books'] if result and 'read_books' in result else 0,
-                'unread_books': result['unread_books'] if result and 'unread_books' in result else 0,
-                'series_books': result['series_books'] if result and 'series_books' in result else 0,
-            }
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Errore database: {str(e)}")
+    def get_database_stats(self) -> Dict:
+        """
+        Recupera statistiche complete del database.
+        """
+        try:
+            with self.session_scope() as session:
+                stats_query = text("""
+                    SELECT 
+                        (SELECT COUNT(*) FROM books) as total_books,
+                        (SELECT COUNT(*) FROM books WHERE rating > 0) as read_books,
+                        (SELECT COUNT(*) FROM books WHERE rating = 0) as unread_books,
+                        (SELECT COUNT(DISTINCT series) FROM books WHERE series IS NOT NULL) as series_books
+                """)
+                
+                result = session.execute(stats_query).first()
+                print("Database stats query result:", result)  # Debug output
+                
+                # Restituzione dei dati con valori di default se mancanti
+                return {
+                    'total_books': result['total_books'] if result and 'total_books' in result else 0,
+                    'read_books': result['read_books'] if result and 'read_books' in result else 0,
+                    'unread_books': result['unread_books'] if result and 'unread_books' in result else 0,
+                    'series_books': result['series_books'] if result and 'series_books' in result else 0,
+                }
+        except SQLAlchemyError as e:
+            raise HTTPException(status_code=500, detail=f"Errore database: {str(e)}")
 
 
     def search_books(
