@@ -8,7 +8,7 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=8)
 
     @validator('email') 
-    def validate_email(self, v):
+    def validate_email(cls, v):
         if '@' not in v:
             raise ValueError('Email non valida')
         return v
@@ -40,7 +40,7 @@ class BookSearchParams(BaseModel):
     limit: int = 100
 
     @validator('limit')
-    def validate_limit(self, v):
+    def validate_limit(cls, v):
         if v < 1 or v > 1000:
             raise ValueError('Limite deve essere tra 1 e 1000')
         return v
