@@ -1,4 +1,3 @@
-# security.py
 from fastapi import Security, HTTPException, status
 from fastapi.security.api_key import APIKeyHeader, APIKeyQuery
 import os
@@ -18,8 +17,10 @@ class TokenManager:
             raise ValueError("API Token deve essere una stringa di 32 caratteri")
 
     @classmethod
-    def validate_api_token(cls, api_key: str = Security(APIKeyHeader(name="X-API-Token", auto_error=False)) | 
-                                                 Security(APIKeyQuery(name="api_token", auto_error=False))):
+    def validate_api_token(cls, 
+        api_key_header: str = Security(APIKeyHeader(name="X-API-Token", auto_error=False)),
+        api_key_query: str = Security(APIKeyQuery(name="api_token", auto_error=False))
+    ):
         """
         Valida il token API passato nell'header o nella query string.
         """
@@ -28,6 +29,9 @@ class TokenManager:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
                 detail="Token non configurato"
             )
+        
+        # Check either header or query parameter
+        api_key = api_key_header or api_key_query
         
         if not api_key or api_key != cls.API_KEY:
             raise HTTPException(
