@@ -5,8 +5,8 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException 
 
-import os
-import fcntl
+import os 
+import fcntl 
 
 class DatabaseLockError(Exception):
     """Eccezione personalizzata per errori di lock del database"""

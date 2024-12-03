@@ -6,10 +6,10 @@ from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 
-from app.cache import CacheManager
-from app.database import CalibreDatabase
-from app.models import LibraryStatsModel, BookModel, BookSearchParams
-from app.security import TokenManager
+from cache import CacheManager 
+from database import CalibreDatabase
+from models import LibraryStatsModel, BookModel, BookSearchParams
+from security import TokenManager
 
 # Configurazioni da variabili d'ambiente
 CALIBRE_LIBRARY_PATH = os.getenv('CALIBRE_LIBRARY_PATH', '/calibre-library')
