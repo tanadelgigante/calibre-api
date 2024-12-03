@@ -1,0 +1,10 @@
+fastapi==0.95.1
+pydantic==1.10.7
+uvicorn==0.22.0
+sqlalchemy==2.0.12
+redis==4.5.4
+python-jose==3.3.0
+python-multipart==0.0.6
+passlib[bcrypt]==1.7.4
+typing-extensions==4.7.1
+fastapi-cache2[redis]==0.2.1
