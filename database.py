@@ -86,9 +86,8 @@ class CalibreDatabase:
                 stats_query = text("""
                     SELECT 
                         (SELECT COUNT(*) FROM books) as total_books,
-                        (SELECT COUNT(*) FROM books WHERE rating > 0) as read_books,
-                        (SELECT COUNT(*) FROM books WHERE rating = 0) as unread_books,
-                        (SELECT COUNT(DISTINCT series) FROM books WHERE series IS NOT NULL) as series_books
+                        (SELECT COUNT(*) FROM authors) as total_authors,
+                        (SELECT COUNT(*) FROM publishers) as total_publishers,
                 """)
                 
                 result = session.execute(stats_query).first()
@@ -100,9 +99,8 @@ class CalibreDatabase:
                 
                 stats = {
                     'total_books': result['total_books'] if 'total_books' in result else 0,
-                    'read_books': result['read_books'] if 'read_books' in result else 0,
-                    'unread_books': result['unread_books'] if 'unread_books' in result else 0,
-                    'series_books': result['series_books'] if 'series_books' in result else 0,
+                    'total_authors': result['total_authors'] if 'total_authors' in result else 0,
+                    'total_publishers': result['total_publishers'] if 'total_publishers' in result else 0,
                 }
                 print("Parsed database stats:", stats)  # Debug output
                 return stats

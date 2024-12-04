@@ -28,9 +28,8 @@ class BookModel(BaseModel):
 
 class LibraryStatsModel(BaseModel):
     total_books: int = 0
-    read_books: int = 0
-    unread_books: int = 0
-    series_books: int = 0
+    total_authors: int = 0
+    total_publishers: int = 0
     last_updated: Optional[datetime] = None
 
 
