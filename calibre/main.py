@@ -6,10 +6,10 @@ from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from datetime import datetime
-from cache import CacheManager 
-from database import CalibreDatabase
-from models import LibraryStatsModel, BookModel, BookSearchParams
-from security import TokenManager
+from calibre.cache import PersistentCache, FastAPICache, cache
+from calibre.database import CalibreDatabase
+from calibre.models import LibraryStatsModel, BookModel, BookSearchParams
+from calibre.security import TokenManager
 
 # Configurazioni da variabili d'ambiente
 CALIBRE_LIBRARY_PATH = os.getenv('CALIBRE_LIBRARY_PATH', '/calibre-library')
@@ -36,41 +36,30 @@ calibre_db = CalibreDatabase(CALIBRE_LIBRARY_PATH)
 # Endpoint statistiche libreria con caching
 @app.get("/statistics", response_model=LibraryStatsModel)
 async def get_library_statistics(
-    _: bool = Depends(TokenManager.validate_api_token)
+    _ : bool = Depends(TokenManager.validate_api_token)
 ):
+    @cache(expire=3600)  # Cache per 1 ora
     async def fetch_stats():
         stats = calibre_db.get_database_stats()
-        print("Stats fetched from database:", stats)  # Debug output
         if not stats:
-            print("No stats returned from database!")
+            raise HTTPException(status_code=500, detail="Failed to fetch library statistics")
+        
         stats['last_updated'] = datetime.now()
         return stats
 
-    result = await CacheManager.cached_query(
-        key="library_stats",
-        query_func=fetch_stats,
-        expire=3600
-    )
-    
-    print("Final stats returned to response:", result)  # Debug response
-    if not result:
-        raise HTTPException(status_code=500, detail="Failed to fetch library statistics")
-    
-    return result
-
-
+    return await fetch_stats()
 
 # Endpoint ricerca libri
 @app.get("/books/search", response_model=list[BookModel])
 async def search_books(
-    params: BookSearchParams=Depends(),
-    _: bool=Depends(TokenManager.validate_api_token)
+    params: BookSearchParams = Depends(),
+    _ : bool = Depends(TokenManager.validate_api_token)
 ):
     """
     Ricerca libri con filtri multipli.
     Richiede token API valido.
     """
-
+    @cache(expire=1800)  # Cache per 30 minuti
     async def search_function():
         return calibre_db.search_books(
             title=params.title,
@@ -78,15 +67,7 @@ async def search_books(
             limit=params.limit
         )
 
-    # Genera chiave di cache basata sui parametri
-    cache_key = f"book_search_{params.title}_{params.author}_{params.limit}"
-    
-    return await CacheManager.cached_query(
-        key=cache_key,
-        query_func=search_function,
-        expire=1800  # Cache valida per 30 minuti
-    )
-
+    return await search_function()
     
 # Endpoint swagger
 @app.get("/docs", include_in_schema=False)
@@ -112,7 +93,13 @@ async def custom_redoc(token: str):
 # Configurazione all'avvio dell'applicazione
 @app.on_event("startup")
 async def startup_event():
-    await CacheManager.init_cache()
+    os.makedirs('/app/cache', exist_ok=True)
+    persistent_cache = PersistentCache(
+        cache_file='/app/cache/calibre_cache.json', 
+        max_size=100, 
+        default_ttl=3600
+    )
+    await FastAPICache.init(persistent_cache, prefix="calibre_")
     TokenManager.init_token()
 
 

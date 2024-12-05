@@ -4,37 +4,17 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ${CALIBRE_LIBRARY_PATH}:/calibre-library
+      - calibre-db:/calibre-library:ro
+      - cache:/app/cache
     environment:
-      - CALIBRE_LIBRARY_PATH=/calibre-library
-      - REDIS_URL=redis://redis:6379/0
-      - API_TOKEN=${API_TOKEN:-change_this_32_char_token_in_production}
-      - CACHE_TTL_HOURS=${CACHE_TTL_HOURS:-4}
+      - API_TOKEN=change_this_32_char_token_in_production
+      - CACHE_TTL_HOURS=4
     ports:
       - "8000:8000"
     depends_on:
       - redis
-    env_file:
-      - .env
-
-
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-
-  # Opzionale: Aggiunta di Redis Insight per monitoraggio
-  redis-insight:
-    image: redislabs/redisinsight:latest
-    ports:
-      - "8001:8001"
-    volumes:
-      - redis-insight-data:/db
-    depends_on:
-      - redis
 
 volumes:
-  redis-data:
-  redis-insight-data:
+  cache:
+  calibre-db:
+    external: true
