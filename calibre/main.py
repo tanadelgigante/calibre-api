@@ -13,6 +13,11 @@ from .security import TokenManager
 # Configurazioni da variabili d'ambiente
 CALIBRE_LIBRARY_PATH = os.getenv('CALIBRE_LIBRARY_PATH', '/calibre-library')
 print(f"[INFO] CALIBRE_LIBRARY_PATH: {CALIBRE_LIBRARY_PATH}")
+# Application information
+APP_NAME = "Calibre API"
+APP_VERSION = "1.0.0"
+APP_AUTHOR = "@ilgigante77"
+APP_WEBSITE = "http://example.com"
 
 def system_setup():
     """
@@ -144,6 +149,9 @@ def register(app):
 
 # Per esecuzione stand-alone
 if __name__ == "__main__":
-    print(f"[INFO] Avvio dell'applicazione Calibre Library API")
+    print(f"[INFO] Avvio dell'applicazione {APP_NAME}")
+    print(f"[INFO] Versione: {APP_VERSION}")
+    print(f"[INFO] Autore: {APP_AUTHOR}")
+    print(f"[INFO] Sito web: {APP_WEBSITE}")
     module = CalibreLibraryAPI()
     module.run(standalone=True)
