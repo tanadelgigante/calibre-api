@@ -10,19 +10,29 @@ class DatabaseLockError(Exception):
 
 class CalibreDatabase:
     def __init__(self, library_path: str):
+        """
+        Initializes the CalibreDatabase instance.
+        Args:
+            library_path (str): The path to the Calibre library.
+        """
         self.library_path = library_path
         self.db_path = os.path.join(library_path, "metadata.db")
         
         if not os.path.exists(self.db_path):
             raise FileNotFoundError(f"Calibre Database not found in {self.db_path}")
+        print(f"[INFO] Calibre Database found at {self.db_path}")
         
         self.engine = create_engine(
             f'sqlite:///{self.db_path}', 
             connect_args={'check_same_thread': False}
         )
 
-
     def get_database_stats(self) -> Dict:
+        """
+        Retrieves statistics from the Calibre database.
+        Returns:
+            Dict: A dictionary with the total counts of books, authors, and publishers.
+        """
         try:
             with self.database_lock():
                 with self.engine.connect() as connection:
@@ -32,14 +42,15 @@ class CalibreDatabase:
                             (SELECT COUNT(*) FROM authors) as total_authors,
                             (SELECT COUNT(*) FROM publishers) as total_publishers
                     """)
-                    
                     result = connection.execute(stats_query).first()
+                    print(f"[DEBUG] Database stats retrieved: {result}")
                     return {
                         'total_books': result['total_books'],
                         'total_authors': result['total_authors'],
                         'total_publishers': result['total_publishers']
                     }
         except SQLAlchemyError as e:
+            print(f"[ERROR] Database error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     def search_books(
@@ -48,6 +59,15 @@ class CalibreDatabase:
         author: Optional[str] = None, 
         limit: int = 100
     ) -> List[Dict]:
+        """
+        Searches for books in the Calibre database.
+        Args:
+            title (Optional[str]): The title to search for.
+            author (Optional[str]): The author to search for.
+            limit (int): The maximum number of results to return.
+        Returns:
+            List[Dict]: A list of dictionaries representing books.
+        """
         try:
             with self.database_lock():
                 with self.engine.connect() as connection:
@@ -78,7 +98,8 @@ class CalibreDatabase:
 
                     query = text(query.text.format(**filters))
                     result = connection.execute(query, params)
-                    
+                    print(f"[DEBUG] Books search executed with params: {params}")
                     return [dict(row) for row in result]
         except SQLAlchemyError as e:
+            print(f"[ERROR] Database search error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Database search error: {str(e)}")
