@@ -1,4 +1,5 @@
 import os
+import subprocess
 from fastapi import FastAPI, Depends
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +12,16 @@ from .security import TokenManager
 
 # Configurazioni da variabili d'ambiente
 CALIBRE_LIBRARY_PATH = os.getenv('CALIBRE_LIBRARY_PATH', '/calibre-library')
+
+def system_setup():
+    """
+    Esegue lo script di configurazione del sistema operativo necessario per il modulo
+    """
+    script_path = os.path.join(os.path.dirname(__file__), 'setup.sh')
+    if os.path.exists(script_path):
+        subprocess.run(['bash', script_path], check=True)
+    else:
+        raise FileNotFoundError(f"Il file {script_path} non esiste.")
 
 class CalibreLibraryAPI:
     def __init__(self):
@@ -93,6 +104,7 @@ class CalibreLibraryAPI:
             self.app.run(host="0.0.0.0", port=8000)
 
 def register(app):
+    system_setup()
     module = CalibreLibraryAPI()
     module.app = app  # Use the external app instance
     module.setup_routes(prefix='/mymodule')
