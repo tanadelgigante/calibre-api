@@ -98,8 +98,8 @@ class PersistentCache:
             
             self._cache[key] = {
                 'value': value,
-                'timestamp': current_time,
-                'expires_at': current_time + timedelta(seconds=ttl)
+                'timestamp': current_time.isoformat(),
+                'expires_at': (current_time + timedelta(seconds=ttl)).isoformat()
             }
 
             print(f"[INFO] Elemento cache impostato per chiave: {key}")
@@ -109,7 +109,7 @@ class PersistentCache:
         current_time = datetime.now()
         expired_keys = [
             k for k, v in self._cache.items() 
-            if v['expires_at'] <= current_time
+            if datetime.fromisoformat(v['expires_at']) <= current_time
         ]
         
         for key in expired_keys:
