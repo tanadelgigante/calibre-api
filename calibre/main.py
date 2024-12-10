@@ -135,10 +135,7 @@ class CalibreLibraryAPI:
         Avvia il server FastAPI.
         """
         if standalone:
-            print(f"[INFO] Avvio del server FastAPI in modalità standalone")
-            self.app = FastAPI()
-            system_setup()
-            self.setup_routes('')
+            print(f"[INFO] Avvio del server FastAPI in modalità standalone")            
             import uvicorn
             uvicorn.run(self.app, host="0.0.0.0", port=8000)
 
@@ -157,5 +154,9 @@ if __name__ == "__main__":
     print(f"[INFO] Versione: {APP_VERSION}")
     print(f"[INFO] Autore: {APP_AUTHOR}")
     print(f"[INFO] Sito web: {APP_WEBSITE}")
+    app = FastAPI()
+    system_setup()
     module = CalibreLibraryAPI()
+    module.setup_routes('')
+    module.app=app
     module.run(standalone=True)
