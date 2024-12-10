@@ -58,12 +58,11 @@ class CalibreLibraryAPI:
             allow_headers=["*"],
         )
 
-    def setup_routes(self, prefix=''):
+    def setup_routes(self):
         """
         Definisce gli endpoint dell'API.
         """
-        @app.get("/statistics", response_model=LibraryStatsModel)
-        @self.app.get(f"{prefix}/statistics", response_model=LibraryStatsModel)
+        @app.get("/calibre/statistics", response_model=LibraryStatsModel)
         async def get_library_statistics(_: bool=Depends(TokenManager.validate_api_token)):
             """
             Endpoint per ottenere le statistiche della libreria.
@@ -78,8 +77,7 @@ class CalibreLibraryAPI:
                 return stats
             return await fetch_stats()
 
-        @app.get("/books/search", response_model=list[BookModel])
-        @self.app.get(f"{prefix}/books/search", response_model=list[BookModel])
+        @app.get("/calibre/books/search", response_model=list[BookModel])
         async def search_books(
             params: BookSearchParams=Depends(),
             _: bool=Depends(TokenManager.validate_api_token)
@@ -97,7 +95,7 @@ class CalibreLibraryAPI:
                 )
             return await search_function()
 
-        @self.app.get(f"{prefix}/docs", include_in_schema=False)
+        @app.get("/calibre/docs", include_in_schema=False)
         async def custom_swagger_ui(token: str):
             """
             Endpoint per la documentazione Swagger UI.
@@ -109,7 +107,7 @@ class CalibreLibraryAPI:
                 )
             raise HTTPException(status_code=403, detail="Invalid token")
 
-        @self.app.get(f"{prefix}/redoc", include_in_schema=False)
+        @app.get("/calibre/redoc", include_in_schema=False)
         async def custom_redoc(token: str):
             """
             Endpoint per la documentazione ReDoc.
@@ -152,8 +150,8 @@ def register(app):
     """
     print(f"[INFO] Registrazione del modulo CalibreLibraryAPI come plug-in")
     system_setup()
-    module = CalibreLibraryAPI()
-    module.setup_routes(prefix='/calibre')
+    module = CalibreLibraryAPI()    
+    module.setup_routes()
 
 # Per esecuzione stand-alone
 if __name__ == "__main__":
@@ -162,4 +160,5 @@ if __name__ == "__main__":
     print(f"[INFO] Autore: {APP_AUTHOR}")
     print(f"[INFO] Sito web: {APP_WEBSITE}")
     module = CalibreLibraryAPI()
+    module.setup_routes()
     module.run(standalone=True)
