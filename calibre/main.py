@@ -20,8 +20,6 @@ APP_VERSION = "1.0.0"
 APP_AUTHOR = "@ilgigante77"
 APP_WEBSITE = "http://example.com"
 
-app = FastAPI()
-
 def system_setup():
     """
     Esegue lo script di configurazione del sistema operativo necessario per il modulo
@@ -138,6 +136,9 @@ class CalibreLibraryAPI:
         """
         if standalone:
             print(f"[INFO] Avvio del server FastAPI in modalità standalone")
+            self.app = FastAPI()
+            system_setup()
+            self.setup_routes('')
             import uvicorn
             uvicorn.run(self.app, host="0.0.0.0", port=8000)
 
@@ -148,7 +149,7 @@ def register(app):
     print(f"[INFO] Registrazione del modulo CalibreLibraryAPI come plug-in")
     system_setup()
     module = CalibreLibraryAPI()
-    module.setup_routes(prefix='/mymodule')
+    module.setup_routes(prefix='/calibre')
 
 # Per esecuzione stand-alone
 if __name__ == "__main__":
