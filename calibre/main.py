@@ -106,6 +106,9 @@ def create_app() -> FastAPI:
 
     return app
 
+# Creare l'app FastAPI
+app = create_app()
+
 def system_setup():
     """
     Esegue lo script di configurazione del sistema operativo necessario per il modulo.
@@ -131,13 +134,11 @@ def register(flask_app):
     
     print("[INFO] Calibre endpoints mounted on Flask app")
 
-
 # Per esecuzione stand-alone
 if __name__ == "__main__":
     print(f"[INFO] Avvio dell'applicazione {APP_NAME}")
     print(f"[INFO] Versione: {APP_VERSION}")
     print(f"[INFO] Autore: {APP_AUTHOR}")
     print(f"[INFO] Sito web: {APP_WEBSITE}")
-    app = create_app()
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
