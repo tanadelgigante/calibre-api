@@ -25,6 +25,18 @@ app = FastAPI(
     description="API per gestione libreria Calibre con autenticazione token"
 )
 
+# Configurazione CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Inizializzazione database Calibre
+calibre_db = CalibreDatabase(CALIBRE_LIBRARY_PATH)
+
 def system_setup():
     """
     Esegue lo script di configurazione del sistema operativo necessario per il modulo
@@ -47,7 +59,7 @@ async def get_library_statistics(_: bool=Depends(TokenManager.validate_api_token
     print(f"[DEBUG] Richiesta per /statistics")
     @cache(expire=3600)  # Cache per 1 ora
     async def fetch_stats():
-        stats = self.calibre_db.get_database_stats()
+        stats = calibre_db.get_database_stats()
         if not stats:
             raise HTTPException(status_code=500, detail="Failed to fetch library statistics")
         stats['last_updated'] = datetime.now()
@@ -65,7 +77,7 @@ async def search_books(
     print(f"[DEBUG] Richiesta per /books/search con parametri: {params}")
     @cache(expire=1800)  # Cache per 30 minuti
     async def search_function():
-        return self.calibre_db.search_books(
+        return calibre_db.search_books(
             title=params.title,
             author=params.author,
             limit=params.limit
@@ -96,21 +108,20 @@ async def custom_redoc(token: str):
         )
     raise HTTPException(status_code=403, detail="Invalid token")
 
-def setup_startup_event(self):
-    @app.on_event("startup")
-    async def startup_event():
-        """
-        Eventi da eseguire all'avvio dell'applicazione.
-        """
-        print(f"[INFO] Configurazione della cache persistente all'avvio")
-        os.makedirs('/app/cache', exist_ok=True)
-        persistent_cache = PersistentCache(
-            cache_file='/app/cache/calibre_cache.json',
-            max_size=100,
-            default_ttl=3600
-        )
-        await FastAPICache.init(persistent_cache, prefix="calibre_")
-        TokenManager.init_token()
+@app.on_event('startup')
+async def startup_event():
+    """
+    Eventi da eseguire all'avvio dell'applicazione.
+    """
+    print(f"[INFO] Configurazione della cache persistente all'avvio")
+    os.makedirs('/app/cache', exist_ok=True)
+    persistent_cache = PersistentCache(
+        cache_file='/app/cache/calibre_cache.json',
+        max_size=100,
+        default_ttl=3600
+    )
+    await FastAPICache.init(persistent_cache, prefix="calibre_")
+    TokenManager.init_token()
 
 def register(instance):
     """
