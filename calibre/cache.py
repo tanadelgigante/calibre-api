@@ -4,6 +4,7 @@ import time
 import asyncio
 from typing import Any, Optional
 from functools import wraps
+from datetime import datetime
 
 class PersistentCache:
     def __init__(
@@ -42,6 +43,12 @@ class PersistentCache:
                         k: v for k, v in loaded_cache.items() 
                         if v['expires_at'] > current_time
                     }
+                    # Convert loaded string timestamps back to datetime objects
+                    for key, value in self._cache.items():
+                        if isinstance(value['timestamp'], str):
+                            value['timestamp'] = datetime.fromisoformat(value['timestamp'])
+                        if isinstance(value['expires_at'], str):
+                            value['expires_at'] = datetime.fromisoformat(value['expires_at'])
             else:
                 print(f"[INFO] File di cache non trovato. Inizializzazione di una nuova cache.")
                 self._cache = {}
@@ -54,8 +61,17 @@ class PersistentCache:
         Salva la cache corrente nel file.
         """
         try:
+            # Convert datetime objects to string before saving
+            cache_to_save = {
+                k: {
+                    **v,
+                    'timestamp': v['timestamp'].isoformat(),
+                    'expires_at': v['expires_at'].isoformat()
+                }
+                for k, v in self._cache.items()
+            }
             with open(self._cache_file, 'w') as f:
-                json.dump(self._cache, f, indent=2)
+                json.dump(cache_to_save, f, indent=2)
             print(f"[INFO] Cache salvata con successo nel file: {self._cache_file}")
         except IOError as e:
             print(f"[ERROR] Errore nel salvataggio della cache: {e}")
@@ -117,8 +133,8 @@ class PersistentCache:
             
             self._cache[key] = {
                 'value': value,
-                'timestamp': current_time,
-                'expires_at': current_time + ttl
+                'timestamp': datetime.fromtimestamp(current_time),
+                'expires_at': datetime.fromtimestamp(current_time + ttl)
             }
 
             print(f"[INFO] Elemento cache impostato per chiave: {key}")
@@ -128,7 +144,7 @@ class PersistentCache:
         """
         Rimuove gli elementi scaduti dalla cache.
         """
-        current_time = time.time()
+        current_time = datetime.fromtimestamp(time.time())
         expired_keys = [
             k for k, v in self._cache.items() 
             if v['expires_at'] <= current_time
