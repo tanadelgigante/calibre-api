@@ -8,11 +8,14 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
-COPY calibre/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy entire application
-COPY calibre/ .
+COPY . .
+
+# Set PYTHONPATH to include /app
+ENV PYTHONPATH=/app
 
 # Expose port
 EXPOSE 8000
