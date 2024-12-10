@@ -20,6 +20,11 @@ APP_VERSION = "1.0.0"
 APP_AUTHOR = "@ilgigante77"
 APP_WEBSITE = "http://example.com"
 
+app = FastAPI(
+    title=APP_NAME,
+    description="API per gestione libreria Calibre con autenticazione token"
+)
+
 def system_setup():
     """
     Esegue lo script di configurazione del sistema operativo necessario per il modulo
@@ -154,7 +159,6 @@ if __name__ == "__main__":
     print(f"[INFO] Versione: {APP_VERSION}")
     print(f"[INFO] Autore: {APP_AUTHOR}")
     print(f"[INFO] Sito web: {APP_WEBSITE}")
-    app = FastAPI()
     system_setup()
     module = CalibreLibraryAPI()
     module.setup_routes('')
