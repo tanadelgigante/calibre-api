@@ -108,7 +108,7 @@ async def custom_redoc(token: str):
         )
     raise HTTPException(status_code=403, detail="Invalid token")
 
-@app.on_event('startup')
+@app.on_event("startup")
 async def startup_event():
     """
     Eventi da eseguire all'avvio dell'applicazione.
