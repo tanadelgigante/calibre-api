@@ -42,9 +42,9 @@ class LibraryStatsModel(BaseModel):
     """
     Modello per rappresentare le statistiche della libreria.
     """
-    total_books: str = "0"
-    total_authors: str = "0"
-    total_publishers: str = "0"
+    total_books: int = 0
+    total_authors: int = 0
+    total_publishers: int = 0
     last_updated: Optional[datetime] = None
 
 class BookSearchParams(BaseModel):

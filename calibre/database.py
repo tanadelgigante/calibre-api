@@ -44,9 +44,9 @@ class CalibreDatabase:
                 result = connection.execute(stats_query).first()
                 print(f"[DEBUG] Database stats retrieved: {result}")
                 return {
-                    'total_books': result['total_books'],
-                    'total_authors': result['total_authors'],
-                    'total_publishers': result['total_publishers']
+                    'total_books': result[0],
+                    'total_authors': result[1],
+                    'total_publishers': result[2]
                 }
         except SQLAlchemyError as e:
             print(f"[ERROR] Database error: {str(e)}")
