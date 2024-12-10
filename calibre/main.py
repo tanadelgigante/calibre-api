@@ -49,7 +49,7 @@ def system_setup():
 
     def setup_cors(self):
         print(f"[INFO] Configurazione del middleware CORS")
-        self.app.add_middleware(
+        app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
             allow_credentials=True,
@@ -57,66 +57,65 @@ def system_setup():
             allow_headers=["*"],
         )
 
-    def setup_routes(self):
+    """
+    Definisce gli endpoint dell'API.
+    """
+    @app.get("/calibre/stats", response_model=LibraryStatsModel)
+    async def get_library_statistics(_: bool=Depends(TokenManager.validate_api_token)):
         """
-        Definisce gli endpoint dell'API.
+        Endpoint per ottenere le statistiche della libreria.
         """
-        @app.get("/calibre/statistics", response_model=LibraryStatsModel)
-        async def get_library_statistics(_: bool=Depends(TokenManager.validate_api_token)):
-            """
-            Endpoint per ottenere le statistiche della libreria.
-            """
-            print(f"[DEBUG] Richiesta per /statistics")
-            @cache(expire=3600)  # Cache per 1 ora
-            async def fetch_stats():
-                stats = self.calibre_db.get_database_stats()
-                if not stats:
-                    raise HTTPException(status_code=500, detail="Failed to fetch library statistics")
-                stats['last_updated'] = datetime.now()
-                return stats
-            return await fetch_stats()
+        print(f"[DEBUG] Richiesta per /statistics")
+        @cache(expire=3600)  # Cache per 1 ora
+        async def fetch_stats():
+            stats = self.calibre_db.get_database_stats()
+            if not stats:
+                raise HTTPException(status_code=500, detail="Failed to fetch library statistics")
+            stats['last_updated'] = datetime.now()
+            return stats
+        return await fetch_stats()
 
-        @app.get("/calibre/books/search", response_model=list[BookModel])
-        async def search_books(
-            params: BookSearchParams=Depends(),
-            _: bool=Depends(TokenManager.validate_api_token)
-        ):
-            """
-            Endpoint per la ricerca di libri.
-            """
-            print(f"[DEBUG] Richiesta per /books/search con parametri: {params}")
-            @cache(expire=1800)  # Cache per 30 minuti
-            async def search_function():
-                return self.calibre_db.search_books(
-                    title=params.title,
-                    author=params.author,
-                    limit=params.limit
-                )
-            return await search_function()
+    @app.get("/calibre/books/search", response_model=list[BookModel])
+    async def search_books(
+        params: BookSearchParams=Depends(),
+        _: bool=Depends(TokenManager.validate_api_token)
+    ):
+        """
+        Endpoint per la ricerca di libri.
+        """
+        print(f"[DEBUG] Richiesta per /books/search con parametri: {params}")
+        @cache(expire=1800)  # Cache per 30 minuti
+        async def search_function():
+            return self.calibre_db.search_books(
+                title=params.title,
+                author=params.author,
+                limit=params.limit
+            )
+        return await search_function()
 
-        @app.get("/calibre/docs", include_in_schema=False)
-        async def custom_swagger_ui(token: str):
-            """
-            Endpoint per la documentazione Swagger UI.
-            """
-            if token == TokenManager.API_KEY:
-                return get_swagger_ui_html(
-                    openapi_url="/openapi.json",
-                    title="Calibre Library API"
-                )
-            raise HTTPException(status_code=403, detail="Invalid token")
+    @app.get("/calibre/docs", include_in_schema=False)
+    async def custom_swagger_ui(token: str):
+        """
+        Endpoint per la documentazione Swagger UI.
+        """
+        if token == TokenManager.API_KEY:
+            return get_swagger_ui_html(
+                openapi_url="/openapi.json",
+                title="Calibre Library API"
+            )
+        raise HTTPException(status_code=403, detail="Invalid token")
 
-        @app.get("/calibre/redoc", include_in_schema=False)
-        async def custom_redoc(token: str):
-            """
-            Endpoint per la documentazione ReDoc.
-            """
-            if token == TokenManager.API_KEY:
-                return get_redoc_html(
-                    openapi_url="/openapi.json",
-                    title="Calibre Library API"
-                )
-            raise HTTPException(status_code=403, detail="Invalid token")
+    @app.get("/calibre/redoc", include_in_schema=False)
+    async def custom_redoc(token: str):
+        """
+        Endpoint per la documentazione ReDoc.
+        """
+        if token == TokenManager.API_KEY:
+            return get_redoc_html(
+                openapi_url="/openapi.json",
+                title="Calibre Library API"
+            )
+        raise HTTPException(status_code=403, detail="Invalid token")
 
     def setup_startup_event(self):
         @self.app.on_event("startup")
