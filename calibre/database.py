@@ -73,10 +73,8 @@ class CalibreDatabase:
                     SELECT 
                         books.id, 
                         books.title, 
-                        authors.name as author
-                    FROM books
-                    JOIN books_authors_link ON books.id = books_authors_link.book
-                    JOIN authors ON books_authors_link.author = authors.id
+                        books.author
+                    FROM books                    
                     WHERE 1=1
                     {title_filter}
                     {author_filter}
@@ -85,7 +83,7 @@ class CalibreDatabase:
 
                 filters = {
                     'title_filter': 'AND books.title LIKE :title' if title else '',
-                    'author_filter': 'AND authors.name LIKE :author' if author else ''
+                    'author_filter': 'AND books.author LIKE :author' if author else ''
                 }
 
                 params = {
