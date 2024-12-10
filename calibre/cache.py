@@ -2,7 +2,6 @@ import json
 import os
 import time
 import asyncio
-from datetime import datetime, timedelta
 from typing import Any, Optional
 from functools import wraps
 
@@ -27,16 +26,11 @@ class PersistentCache:
                 print(f"[INFO] Caricamento della cache dal file: {self._cache_file}")
                 with open(self._cache_file, 'r') as f:
                     loaded_cache = json.load(f)
-                    current_time = datetime.now()
+                    current_time = time.time() * 1000
                     self._cache = {
                         k: v for k, v in loaded_cache.items() 
-                        if datetime.fromisoformat(v['expires_at']) > current_time
+                        if v['expires_at'] > current_time
                     }
-                    for key, value in self._cache.items():
-                        if isinstance(value['timestamp'], str):
-                            value['timestamp'] = datetime.fromisoformat(value['timestamp'])
-                        if isinstance(value['expires_at'], str):
-                            value['expires_at'] = datetime.fromisoformat(value['expires_at'])
             else:
                 print(f"[INFO] File di cache non trovato. Inizializzazione di una nuova cache.")
                 self._cache = {}
@@ -46,16 +40,8 @@ class PersistentCache:
 
     def _save_cache(self):
         try:
-            cache_to_save = {
-                k: {
-                    **v,
-                    'timestamp': v['timestamp'].isoformat() if isinstance(v['timestamp'], datetime) else v['timestamp'],
-                    'expires_at': v['expires_at'].isoformat() if isinstance(v['expires_at'], datetime) else v['expires_at']
-                }
-                for k, v in self._cache.items()
-            }
             with open(self._cache_file, 'w') as f:
-                json.dump(cache_to_save, f, indent=2)
+                json.dump(self._cache, f, indent=2)
             print(f"[INFO] Cache salvata con successo nel file: {self._cache_file}")
         except IOError as e:
             print(f"[ERROR] Errore nel salvataggio della cache: {e}")
@@ -67,7 +53,7 @@ class PersistentCache:
         async with self._lock:
             self._cleanup()
             entry = self._cache.get(key)
-            current_time = datetime.now()
+            current_time = time.time() * 1000
             if entry and entry['expires_at'] > current_time:
                 print(f"[INFO] Elemento cache trovato per chiave: {key}")
                 return entry['value']
@@ -95,23 +81,23 @@ class PersistentCache:
                 print(f"[INFO] Rimozione dell'elemento cache più vecchio: {oldest_key}")
                 del self._cache[oldest_key]
 
-            ttl = expire or self._default_ttl
-            current_time = datetime.now()
+            ttl = (expire or self._default_ttl) * 1000
+            current_time = time.time() * 1000
             
             self._cache[key] = {
                 'value': value,
-                'timestamp': current_time.isoformat(),
-                'expires_at': (current_time + timedelta(seconds=ttl)).isoformat()
+                'timestamp': current_time,
+                'expires_at': current_time + ttl
             }
 
             print(f"[INFO] Elemento cache impostato per chiave: {key}")
             self._save_cache()
 
     def _cleanup(self):
-        current_time = datetime.now()
+        current_time = time.time() * 1000
         expired_keys = [
             k for k, v in self._cache.items() 
-            if datetime.fromisoformat(v['expires_at']) <= current_time
+            if v['expires_at'] <= current_time
         ]
         
         for key in expired_keys:
