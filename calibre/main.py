@@ -62,6 +62,7 @@ class CalibreLibraryAPI:
         """
         Definisce gli endpoint dell'API.
         """
+        @app.get("/statistics", response_model=LibraryStatsModel)
         @self.app.get(f"{prefix}/statistics", response_model=LibraryStatsModel)
         async def get_library_statistics(_: bool=Depends(TokenManager.validate_api_token)):
             """
@@ -77,6 +78,7 @@ class CalibreLibraryAPI:
                 return stats
             return await fetch_stats()
 
+        @app.get("/books/search", response_model=list[BookModel])
         @self.app.get(f"{prefix}/books/search", response_model=list[BookModel])
         async def search_books(
             params: BookSearchParams=Depends(),
@@ -159,8 +161,5 @@ if __name__ == "__main__":
     print(f"[INFO] Versione: {APP_VERSION}")
     print(f"[INFO] Autore: {APP_AUTHOR}")
     print(f"[INFO] Sito web: {APP_WEBSITE}")
-    system_setup()
     module = CalibreLibraryAPI()
-    module.setup_routes('')
-    module.app=app
     module.run(standalone=True)
