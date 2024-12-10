@@ -96,7 +96,7 @@ class CalibreDatabase:
 
                 query = text(query.text.format(**filters))
                 result = connection.execute(query, params)
-                print(f"[DEBUG] Books search executed with params: {params}")
+                print(f"[INFO] Books search executed with params: {params}")
                 return [dict(row) for row in result]
         except SQLAlchemyError as e:
             print(f"[ERROR] Database search error: {str(e)}")
