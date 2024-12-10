@@ -36,27 +36,6 @@ def system_setup():
     else:
         raise FileNotFoundError(f"Il file {script_path} non esiste.")
 
-    def __init__(self):
-        print(f"[INFO] Inizializzazione di CalibreLibraryAPI")
-        self.app = FastAPI(
-            title="Calibre Library API",
-            description="API per gestione libreria Calibre con autenticazione token"
-        )
-        self.setup_cors()
-        self.calibre_db = CalibreDatabase(CALIBRE_LIBRARY_PATH)
-        self.setup_routes()
-        self.setup_startup_event()
-
-    def setup_cors(self):
-        print(f"[INFO] Configurazione del middleware CORS")
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=["*"],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-
 """
 Definisce gli endpoint dell'API.
 """
@@ -118,7 +97,7 @@ async def custom_redoc(token: str):
     raise HTTPException(status_code=403, detail="Invalid token")
 
 def setup_startup_event(self):
-    @self.app.on_event("startup")
+    @app.on_event("startup")
     async def startup_event():
         """
         Eventi da eseguire all'avvio dell'applicazione.
@@ -132,7 +111,6 @@ def setup_startup_event(self):
         )
         await FastAPICache.init(persistent_cache, prefix="calibre_")
         TokenManager.init_token()
-
 
 def register(instance):
     """
