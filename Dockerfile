@@ -12,7 +12,7 @@ COPY calibre/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy entire application
-COPY . .
+COPY calibre/ .
 
 # Set PYTHONPATH to include /app
 ENV PYTHONPATH=/app
