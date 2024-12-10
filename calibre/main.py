@@ -20,6 +20,8 @@ APP_VERSION = "1.0.0"
 APP_AUTHOR = "@ilgigante77"
 APP_WEBSITE = "http://example.com"
 
+app = FastAPI()
+
 def system_setup():
     """
     Esegue lo script di configurazione del sistema operativo necessario per il modulo
