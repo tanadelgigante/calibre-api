@@ -33,8 +33,10 @@ class PersistentCache:
                         if datetime.fromisoformat(v['expires_at']) > current_time
                     }
                     for key, value in self._cache.items():
-                        value['timestamp'] = datetime.fromisoformat(value['timestamp'])
-                        value['expires_at'] = datetime.fromisoformat(value['expires_at'])
+                        if isinstance(value['timestamp'], str):
+                            value['timestamp'] = datetime.fromisoformat(value['timestamp'])
+                        if isinstance(value['expires_at'], str):
+                            value['expires_at'] = datetime.fromisoformat(value['expires_at'])
             else:
                 print(f"[INFO] File di cache non trovato. Inizializzazione di una nuova cache.")
                 self._cache = {}
@@ -47,8 +49,8 @@ class PersistentCache:
             cache_to_save = {
                 k: {
                     **v,
-                    'timestamp': v['timestamp'].isoformat(),
-                    'expires_at': v['expires_at'].isoformat()
+                    'timestamp': v['timestamp'].isoformat() if isinstance(v['timestamp'], datetime) else v['timestamp'],
+                    'expires_at': v['expires_at'].isoformat() if isinstance(v['expires_at'], datetime) else v['expires_at']
                 }
                 for k, v in self._cache.items()
             }
