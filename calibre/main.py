@@ -20,7 +20,7 @@ APP_VERSION = "1.0.0"
 APP_AUTHOR = "@ilgigante77"
 APP_WEBSITE = "http://example.com"
 
-app = FastAPI(
+instance = FastAPI(
     title=APP_NAME,
     description="API per gestione libreria Calibre con autenticazione token"
 )
@@ -36,7 +36,6 @@ def system_setup():
     else:
         raise FileNotFoundError(f"Il file {script_path} non esiste.")
 
-class CalibreLibraryAPI:
     def __init__(self):
         print(f"[INFO] Inizializzazione di CalibreLibraryAPI")
         self.app = FastAPI(
@@ -62,7 +61,7 @@ class CalibreLibraryAPI:
         """
         Definisce gli endpoint dell'API.
         """
-        @app.get("/calibre/statistics", response_model=LibraryStatsModel)
+        @instance.get("/calibre/statistics", response_model=LibraryStatsModel)
         async def get_library_statistics(_: bool=Depends(TokenManager.validate_api_token)):
             """
             Endpoint per ottenere le statistiche della libreria.
@@ -77,7 +76,7 @@ class CalibreLibraryAPI:
                 return stats
             return await fetch_stats()
 
-        @app.get("/calibre/books/search", response_model=list[BookModel])
+        @instance.get("/calibre/books/search", response_model=list[BookModel])
         async def search_books(
             params: BookSearchParams=Depends(),
             _: bool=Depends(TokenManager.validate_api_token)
@@ -95,7 +94,7 @@ class CalibreLibraryAPI:
                 )
             return await search_function()
 
-        @app.get("/calibre/docs", include_in_schema=False)
+        @instance.get("/calibre/docs", include_in_schema=False)
         async def custom_swagger_ui(token: str):
             """
             Endpoint per la documentazione Swagger UI.
@@ -107,7 +106,7 @@ class CalibreLibraryAPI:
                 )
             raise HTTPException(status_code=403, detail="Invalid token")
 
-        @app.get("/calibre/redoc", include_in_schema=False)
+        @instance.get("/calibre/redoc", include_in_schema=False)
         async def custom_redoc(token: str):
             """
             Endpoint per la documentazione ReDoc.
@@ -126,23 +125,15 @@ class CalibreLibraryAPI:
             Eventi da eseguire all'avvio dell'applicazione.
             """
             print(f"[INFO] Configurazione della cache persistente all'avvio")
-            os.makedirs('/app/cache', exist_ok=True)
+            os.makedirs('/instance/cache', exist_ok=True)
             persistent_cache = PersistentCache(
-                cache_file='/app/cache/calibre_cache.json',
+                cache_file='/instance/cache/calibre_cache.json',
                 max_size=100,
                 default_ttl=3600
             )
             await FastAPICache.init(persistent_cache, prefix="calibre_")
             TokenManager.init_token()
 
-    def run(self, standalone=False):
-        """
-        Avvia il server FastAPI.
-        """
-        if standalone:
-            print(f"[INFO] Avvio del server FastAPI in modalità standalone")            
-            import uvicorn
-            uvicorn.run(self.app, host="0.0.0.0", port=8000)
 
 def register(app):
     """
@@ -150,8 +141,7 @@ def register(app):
     """
     print(f"[INFO] Registrazione del modulo CalibreLibraryAPI come plug-in")
     system_setup()
-    module = CalibreLibraryAPI()    
-    module.setup_routes()
+    instance=app  
 
 # Per esecuzione stand-alone
 if __name__ == "__main__":
@@ -159,6 +149,5 @@ if __name__ == "__main__":
     print(f"[INFO] Versione: {APP_VERSION}")
     print(f"[INFO] Autore: {APP_AUTHOR}")
     print(f"[INFO] Sito web: {APP_WEBSITE}")
-    module = CalibreLibraryAPI()
-    module.setup_routes()
-    module.run(standalone=True)
+    import uvicorn
+    uvicorn.run(instance, host="0.0.0.0", port=8000)
