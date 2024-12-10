@@ -4,11 +4,14 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 
+
 class DatabaseLockError(Exception):
     """Custom exception for database lock errors"""
     pass
 
+ 
 class CalibreDatabase:
+
     def __init__(self, library_path: str):
         """
         Initializes the CalibreDatabase instance.
@@ -23,7 +26,7 @@ class CalibreDatabase:
         print(f"[INFO] Calibre Database found at {self.db_path}")
         
         self.engine = create_engine(
-            f'sqlite:///{self.db_path}', 
+            f'sqlite:///{self.db_path}',
             connect_args={'check_same_thread': False}
         )
 
@@ -53,10 +56,10 @@ class CalibreDatabase:
             raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     def search_books(
-        self, 
-        title: Optional[str] = None, 
-        author: Optional[str] = None, 
-        limit: int = 100
+        self,
+        title: Optional[str]=None,
+        author: Optional[str]=None,
+        limit: int=100
     ) -> List[Dict]:
         """
         Searches for books in the Calibre database.

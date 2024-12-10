@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field, validator
-from typing import Optional, List
 from datetime import datetime
+from typing import Optional, List
+
+from pydantic import BaseModel, Field, validator
+
 
 class UserCreate(BaseModel):
     """
@@ -19,6 +21,7 @@ class UserCreate(BaseModel):
             raise ValueError('Email non valida')
         return v
 
+
 class UserResponse(BaseModel):
     """
     Modello per la risposta dell'utente con informazioni di base.
@@ -27,6 +30,7 @@ class UserResponse(BaseModel):
     username: str
     email: str
     created_at: datetime
+
 
 class BookModel(BaseModel):
     """
@@ -38,6 +42,7 @@ class BookModel(BaseModel):
     rating: Optional[float] = None
     published_date: Optional[datetime] = None
 
+
 class LibraryStatsModel(BaseModel):
     """
     Modello per rappresentare le statistiche della libreria.
@@ -46,6 +51,7 @@ class LibraryStatsModel(BaseModel):
     total_authors: int = 0
     total_publishers: int = 0
     last_updated: Optional[datetime] = None
+
 
 class BookSearchParams(BaseModel):
     """
@@ -64,6 +70,7 @@ class BookSearchParams(BaseModel):
         if v < 1 or v > 1000:
             raise ValueError('Limite deve essere tra 1 e 1000')
         return v
+
 
 class TokenModel(BaseModel):
     """

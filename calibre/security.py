@@ -1,6 +1,8 @@
+import os
+
 from fastapi import Security, HTTPException, status
 from fastapi.security.api_key import APIKeyHeader, APIKeyQuery
-import os
+
 
 class TokenManager:
     API_KEY = None
@@ -19,9 +21,9 @@ class TokenManager:
         print(f"[DEBUG] Token API inizializzato: {'***' if cls.API_KEY else 'None'}")
 
     @classmethod
-    def validate_api_token(cls, 
-        api_key_header: str = Security(APIKeyHeader(name="X-API-Token", auto_error=False)),
-        api_key_query: str = Security(APIKeyQuery(name="api_token", auto_error=False))
+    def validate_api_token(cls,
+        api_key_header: str=Security(APIKeyHeader(name="X-API-Token", auto_error=False)),
+        api_key_query: str=Security(APIKeyQuery(name="api_token", auto_error=False))
     ):
         """
         Valida il token API passato nell'header o nella query string.
@@ -31,7 +33,7 @@ class TokenManager:
         if not cls.API_KEY:
             print(f"[ERROR] Token non configurato")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Token non configurato"
             )
         
@@ -43,7 +45,7 @@ class TokenManager:
         if not api_key or api_key != cls.API_KEY:
             print(f"[ERROR] Token non valido: {'***' if api_key else 'None'}")
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, 
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail="Token non valido"
             )
         

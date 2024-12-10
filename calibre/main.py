@@ -1,12 +1,12 @@
+from datetime import datetime
 import os
 import subprocess
+
 from fastapi import FastAPI, Depends
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
-from datetime import datetime
 
-from cache import PersistentCache, FastAPICache, cache 
 from database import CalibreDatabase
 from models import LibraryStatsModel, BookModel, BookSearchParams
 from security import TokenManager
@@ -37,6 +37,7 @@ app.add_middleware(
 # Inizializzazione database Calibre
 calibre_db = CalibreDatabase(CALIBRE_LIBRARY_PATH)
 
+
 def system_setup():
     """
     Esegue lo script di configurazione del sistema operativo necessario per il modulo
@@ -51,20 +52,24 @@ def system_setup():
 """
 Definisce gli endpoint dell'API.
 """
+
+
 @app.get("/calibre/stats", response_model=LibraryStatsModel)
 async def get_library_statistics(_: bool=Depends(TokenManager.validate_api_token)):
     """
     Endpoint per ottenere le statistiche della libreria.
     """
     print(f"[DEBUG] Richiesta per /statistics")
-    @cache(expire=3600)  # Cache per 1 ora
+
     async def fetch_stats():
         stats = calibre_db.get_database_stats()
         if not stats:
             raise HTTPException(status_code=500, detail="Failed to fetch library statistics")
         stats['last_updated'] = datetime.now()
         return stats
+
     return await fetch_stats()
+
 
 @app.get("/calibre/books/search", response_model=list[BookModel])
 async def search_books(
@@ -75,14 +80,16 @@ async def search_books(
     Endpoint per la ricerca di libri.
     """
     print(f"[DEBUG] Richiesta per /books/search con parametri: {params}")
-    @cache(expire=1800)  # Cache per 30 minuti
+
     async def search_function():
         return calibre_db.search_books(
             title=params.title,
             author=params.author,
             limit=params.limit
         )
+
     return await search_function()
+
 
 @app.get("/calibre/docs", include_in_schema=False)
 async def custom_swagger_ui(token: str):
@@ -96,6 +103,7 @@ async def custom_swagger_ui(token: str):
         )
     raise HTTPException(status_code=403, detail="Invalid token")
 
+
 @app.get("/calibre/redoc", include_in_schema=False)
 async def custom_redoc(token: str):
     """
@@ -108,20 +116,14 @@ async def custom_redoc(token: str):
         )
     raise HTTPException(status_code=403, detail="Invalid token")
 
+
 @app.on_event("startup")
 async def startup_event():
     """
     Eventi da eseguire all'avvio dell'applicazione.
     """
-    print(f"[INFO] Configurazione della cache persistente all'avvio")
-    os.makedirs('/app/cache', exist_ok=True)
-    persistent_cache = PersistentCache(
-        cache_file='/app/cache/calibre_cache.json',
-        max_size=100,
-        default_ttl=3600
-    )
-    await FastAPICache.init(persistent_cache, prefix="calibre_")
     TokenManager.init_token()
+
 
 def register(instance):
     """
@@ -129,7 +131,8 @@ def register(instance):
     """
     print(f"[INFO] Registrazione del modulo CalibreLibraryAPI come plug-in")
     system_setup()
-    app=instance  
+    app = instance  
+
 
 # Per esecuzione stand-alone
 if __name__ == "__main__":
