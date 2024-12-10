@@ -34,21 +34,20 @@ class CalibreDatabase:
             Dict: A dictionary with the total counts of books, authors, and publishers.
         """
         try:
-            with self.database_lock():
-                with self.engine.connect() as connection:
-                    stats_query = text("""
-                        SELECT 
-                            (SELECT COUNT(*) FROM books) as total_books,
-                            (SELECT COUNT(*) FROM authors) as total_authors,
-                            (SELECT COUNT(*) FROM publishers) as total_publishers
-                    """)
-                    result = connection.execute(stats_query).first()
-                    print(f"[DEBUG] Database stats retrieved: {result}")
-                    return {
-                        'total_books': result['total_books'],
-                        'total_authors': result['total_authors'],
-                        'total_publishers': result['total_publishers']
-                    }
+            with self.engine.connect() as connection:
+                stats_query = text("""
+                    SELECT 
+                        (SELECT COUNT(*) FROM books) as total_books,
+                        (SELECT COUNT(*) FROM authors) as total_authors,
+                        (SELECT COUNT(*) FROM publishers) as total_publishers
+                """)
+                result = connection.execute(stats_query).first()
+                print(f"[DEBUG] Database stats retrieved: {result}")
+                return {
+                    'total_books': result['total_books'],
+                    'total_authors': result['total_authors'],
+                    'total_publishers': result['total_publishers']
+                }
         except SQLAlchemyError as e:
             print(f"[ERROR] Database error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -69,37 +68,36 @@ class CalibreDatabase:
             List[Dict]: A list of dictionaries representing books.
         """
         try:
-            with self.database_lock():
-                with self.engine.connect() as connection:
-                    query = text("""
-                        SELECT 
-                            books.id, 
-                            books.title, 
-                            authors.name as author
-                        FROM books
-                        JOIN books_authors_link ON books.id = books_authors_link.book
-                        JOIN authors ON books_authors_link.author = authors.id
-                        WHERE 1=1
-                        {title_filter}
-                        {author_filter}
-                        LIMIT :limit
-                    """)
+            with self.engine.connect() as connection:
+                query = text("""
+                    SELECT 
+                        books.id, 
+                        books.title, 
+                        authors.name as author
+                    FROM books
+                    JOIN books_authors_link ON books.id = books_authors_link.book
+                    JOIN authors ON books_authors_link.author = authors.id
+                    WHERE 1=1
+                    {title_filter}
+                    {author_filter}
+                    LIMIT :limit
+                """)
 
-                    filters = {
-                        'title_filter': 'AND books.title LIKE :title' if title else '',
-                        'author_filter': 'AND authors.name LIKE :author' if author else ''
-                    }
+                filters = {
+                    'title_filter': 'AND books.title LIKE :title' if title else '',
+                    'author_filter': 'AND authors.name LIKE :author' if author else ''
+                }
 
-                    params = {
-                        'limit': limit,
-                        'title': f'%{title}%' if title else None,
-                        'author': f'%{author}%' if author else None
-                    }
+                params = {
+                    'limit': limit,
+                    'title': f'%{title}%' if title else None,
+                    'author': f'%{author}%' if author else None
+                }
 
-                    query = text(query.text.format(**filters))
-                    result = connection.execute(query, params)
-                    print(f"[DEBUG] Books search executed with params: {params}")
-                    return [dict(row) for row in result]
+                query = text(query.text.format(**filters))
+                result = connection.execute(query, params)
+                print(f"[DEBUG] Books search executed with params: {params}")
+                return [dict(row) for row in result]
         except SQLAlchemyError as e:
             print(f"[ERROR] Database search error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Database search error: {str(e)}")
