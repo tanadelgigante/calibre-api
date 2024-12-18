@@ -38,7 +38,7 @@ def create_app() -> FastAPI:
     # Inizializzazione database Calibre
     calibre_db = CalibreDatabase(CALIBRE_LIBRARY_PATH)
 
-    @app.get("/calibre/stats", response_model=LibraryStatsModel)
+    @app.get("/stats", response_model=LibraryStatsModel)
     async def get_library_statistics(_: bool=Depends(TokenManager.validate_api_token)):
         """
         Endpoint per ottenere le statistiche della libreria.
@@ -54,7 +54,7 @@ def create_app() -> FastAPI:
 
         return await fetch_stats()
 
-    @app.get("/calibre/books/search", response_model=list[BookModel])
+    @app.get("/books/search", response_model=list[BookModel])
     async def search_books(
         params: BookSearchParams=Depends(),
         _: bool=Depends(TokenManager.validate_api_token)
@@ -73,7 +73,7 @@ def create_app() -> FastAPI:
 
         return await search_function()
 
-    @app.get("/calibre/docs", include_in_schema=False)
+    @app.get("/docs", include_in_schema=False)
     async def custom_swagger_ui(token: str):
         """
         Endpoint per la documentazione Swagger UI.
@@ -85,7 +85,7 @@ def create_app() -> FastAPI:
             )
         raise HTTPException(status_code=403, detail="Invalid token")
 
-    @app.get("/calibre/redoc", include_in_schema=False)
+    @app.get("/redoc", include_in_schema=False)
     async def custom_redoc(token: str):
         """
         Endpoint per la documentazione ReDoc.
@@ -119,20 +119,6 @@ def system_setup():
         subprocess.run(['bash', script_path], check=True)
     else:
         raise FileNotFoundError(f"Il file {script_path} non esiste.")
-
-def register(flask_app):
-    """
-    Registra il modulo CalibreLibraryAPI come plug-in.
-    """
-    print(f"[INFO] Registrazione del modulo CalibreLibraryAPI come plug-in")
-    system_setup()
-    fastapi_app = create_app()
-    
-    @flask_app.route('/calibre/<path:path>', methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"])
-    def proxy_to_fastapi(path):
-        return fastapi_app.openapi()
-    
-    print("[INFO] Calibre endpoints mounted on Flask app")
 
 # Per esecuzione stand-alone
 if __name__ == "__main__":

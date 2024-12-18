@@ -7,7 +7,6 @@ services:
       - calibre-db:/calibre-library:ro
     environment:
       - API_TOKEN=change_this_32_char_token_in_production
-      - CACHE_TTL_HOURS=4
     ports:
       - "8000:8000"
 

@@ -1,7 +1,7 @@
 # Calibre Library API
 
 ## Overview
-**Calibre Library API** is a FastAPI application designed to manage and serve data from a Calibre library. It can function both as a standalone application and as a plug-in for **Civil Servant**.
+**Calibre Library API** is a FastAPI application designed to manage and serve data from a Calibre library database. It can function both as a standalone application and as a plug-in for **[Civil Servant](https://github.com/tanadelgigante/civil-servant)**.
 
 ## Features
 - **CORS Configuration**: Configurable CORS middleware to handle cross-origin requests.
@@ -12,8 +12,8 @@
 ## Application Information
 - **Name**: Calibre Library API
 - **Version**: 1.0.0
-- **Author**: Your Name
-- **Website**: [http://example.com](http://example.com)
+- **Author**: @ilgigante77
+- **Website**: [https://github.com/tanadelgigante/calibre-api](https://github.com/tanadelgigante/calibre-api)
 
 ## License
 This project is licensed under the GPL 3 License. See the [LICENSE](LICENSE) file for details.
@@ -128,5 +128,8 @@ Contributions are welcome! Please fork the repository and submit pull requests f
 ### License
 This project is licensed under the GPL 3.0 License. See the [LICENSE](LICENSE) file for details.
 
+### Disclaimer
+This project is released "as-is" and the author is not responsible for damage, errors or misuse. This project is not affiliated neither with Calibre nor Calibre Web nor CWA nor any other derivative Calibre projects.
+
 ## Contact
-For more information, visit [http://example.com](http://example.com) or contact [Your Name](mailto:youremail@example.com).
+For more information, visit [https://github.com/tanadelgigante/calibre-api](https://github.com/tanadelgigante/calibre-api)
