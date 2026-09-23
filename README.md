@@ -11,7 +11,7 @@
 
 ## Application Information
 - **Name**: Calibre Library API
-- **Version**: 1.0.0
+- **Version**: 2.0.0
 - **Author**: @ilgigante77
 - **Website**: [https://github.com/tanadelgigante/calibre-api](https://github.com/tanadelgigante/calibre-api)
 
@@ -50,7 +50,7 @@ This project is licensed under the GPL 3 License. See the [LICENSE](LICENSE) fil
 
 1. **Run Locally**:
     ```bash
-    python main.py
+    python src/main.py
     ```
 
 2. **Using Docker**:
@@ -60,14 +60,21 @@ This project is licensed under the GPL 3 License. See the [LICENSE](LICENSE) fil
 
     WORKDIR /app
 
-    COPY . .
-
+    COPY requirements.txt .
     RUN pip install --no-cache-dir -r requirements.txt
+
+    COPY src/ .
 
     EXPOSE 8000
 
-    CMD ["python", "main.py"]
+    CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
     ```
+
+---
+### Contact & Support
+For issues or contributions, please contact the maintainer:
+- **Author:** [ilgigante77](https://github.com/ilgigante77)
+- **Project:** Calibre Library API
 
    Build and run the Docker container:
     ```bash

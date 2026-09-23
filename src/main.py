@@ -1,0 +1,147 @@
+from datetime import datetime
+import os
+import subprocess
+
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+
+from .database import CalibreDatabase
+from .models import LibraryStatsModel, BookModel, BookSearchParams, BookEditParams, BookDeleteParams
+from .security import TokenManager
+
+# Configurazioni da variabili d'ambiente
+CALIBRE_LIBRARY_PATH = os.getenv('CALIBRE_LIBRARY_PATH', '/calibre-library')
+print(f"[INFO] CALIBRE_LIBRARY_PATH: {CALIBRE_LIBRARY_PATH}")
+
+# Application information
+APP_NAME = "Calibre API"
+APP_VERSION = "2.0.0" 
+APP_AUTHOR = "@ilgigante77"
+APP_WEBSITE = "http://example.com"
+
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title=APP_NAME,
+        description="API per gestione libreria Calibre con autenticazione token"
+    )
+
+    # Configurazione CORS
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # Inizializzazione database Calibre
+    calibre_db = CalibreDatabase(CALIBRE_LIBRARY_PATH)
+
+    @app.get("/stats", response_model=LibraryStatsModel)
+    async def get_library_statistics(_: bool=Depends(TokenManager.validate_api_token)):
+        """
+        Endpoint per ottenere le statistiche della libreria.
+        """
+        print(f"[DEBUG] Richiesta per /statistics")
+
+        async def fetch_stats():
+            stats = calibre_db.get_database_stats()
+            if not stats:
+                raise HTTPException(status_code=500, detail="Failed to fetch library statistics")
+            stats['last_updated'] = datetime.now()
+            return stats
+
+        return await fetch_stats()
+
+    @app.get("/books/stats/extended", response_model=LibraryStatsModel)
+    async def get_extended_statistics(_: bool=Depends(TokenManager.validate_api_token)):
+        """
+        Endpoint per ottenere statistiche estese della libreria.
+        """
+        return calibre_db.get_extended_stats()
+
+    @app.get("/books/by-series/{series_name}", response_model=list[BookModel])
+    async def get_books_by_series(series_name: str, _: bool=Depends(TokenManager.validate_api_token)):
+        """
+        Endpoint per ottenere i libri di una serie specifica.
+        """
+        return calibre_db.get_books_by_series(series_name)
+
+    @app.get("/books/by-language/{lang_code}", response_model=list[BookModel])
+    async def get_books_by_language(lang_code: str, _: bool=Depends(TokenManager.validate_api_token)):
+        """
+        Endpoint per ottenere i libri di una lingua specifica.
+        """
+        return calibre_db.get_books_by_language(lang_code)
+
+    @app.put("/books/{book_id}")
+    async def update_book(book_id: int, params: BookEditParams, _: bool=Depends(TokenManager.validate_api_token)):
+        """
+        Endpoint per aggiornare i metadati di un libro.
+        """
+        update_data = params.model_dump(exclude_unset=True)
+        return calibre_db.update_book_metadata(book_id, update_data)
+
+    @app.delete("/books/{book_id}")
+    async def delete_book(book_id: int, _: bool=Depends(TokenManager.validate_api_token)):
+        """
+        Endpoint per eliminare un libro dal database.
+        """
+        return calibre_db.delete_book(book_id)
+
+    @app.get("/docs", include_in_schema=False)
+    async def custom_swagger_ui(token: str):
+        """
+        Endpoint per la documentazione Swagger UI.
+        """
+        if token == TokenManager.API_KEY:
+            return get_swagger_ui_html(
+                openapi_url="/openapi.json",
+                title="Calibre Library API"
+            )
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    @app.get("/redoc", include_in_schema=False)
+    async def custom_redoc(token: str):
+        """
+        Endpoint per la documentazione ReDoc.
+        """
+        if token == TokenManager.API_KEY:
+            return get_redoc_html(
+                openapi_url="/openapi.json",
+                title="Calibre Library API"
+            )
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    @app.on_event("startup")
+    async def startup_event():
+        """
+        Eventi da eseguire all'avvio dell'applicazione.
+        """
+        TokenManager.init_token()
+
+    return app
+
+# Creare l'app FastAPI
+app = create_app()
+
+def system_setup():
+    """
+    Esegue lo script di configurazione del sistema operativo necessario per il modulo.
+    """
+    script_path = os.path.join(os.path.dirname(__file__), 'setup.sh')
+    if os.path.exists(script_path):
+        print(f"[INFO] Esecuzione dello script di setup: {script_path}")
+        subprocess.run(['bash', script_path], check=True)
+    else:
+        raise FileNotFoundError(f"Il file {script_path} non esiste.")
+
+# Per esecuzione stand-alone
+if __name__ == "__main__":
+    print(f"[INFO] Avvio dell'applicazione {APP_NAME}")
+    print(f"[INFO] Versione: {APP_VERSION}")
+    print(f"[INFO] Autore: {APP_AUTHOR}")
+    print(f"[INFO] Sito web: {APP_WEBSITE}")
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)

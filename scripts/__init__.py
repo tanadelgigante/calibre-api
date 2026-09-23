@@ -1,0 +1,3 @@
+"""
+Calibre API - Scripts package.
+"""
