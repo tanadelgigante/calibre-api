@@ -21,7 +21,7 @@ env:
 
 jobs:
   ci-skip-check:
-    runs-on: ubuntu-latest
+    runs-on: lab
     outputs:
       should_skip: ${{ steps.check.outputs.should_skip }}
     steps:
@@ -37,7 +37,7 @@ jobs:
   build:
     needs: ci-skip-check
     if: needs.ci-skip-check.outputs.should_skip == 'false'
-    runs-on: ubuntu-latest
+    runs-on: lab
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -64,7 +64,7 @@ jobs:
 
   docker:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: lab
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
